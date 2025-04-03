@@ -1,0 +1,108 @@
+-- Создание таблицы Clients
+CREATE TABLE Clients (
+    Id BIGSERIAL PRIMARY KEY,
+    ClientName VARCHAR(200) NOT NULL
+);
+
+-- Создание таблицы ClientContacts
+CREATE TABLE ClientContacts (
+    Id BIGSERIAL PRIMARY KEY,
+    ClientId BIGINT NOT NULL,
+    ContactType VARCHAR(255) NOT NULL,
+    ContactValue VARCHAR(255) NOT NULL,
+    CONSTRAINT fk_client
+        FOREIGN KEY (ClientId) 
+        REFERENCES Clients(Id)
+        ON DELETE CASCADE
+);
+
+-- Вставка данных в таблицу Clients
+INSERT INTO Clients (ClientName) VALUES
+('ООО "Ромашка"'),
+('АО "Технопром"'),
+('ИП Иванов И.И.'),
+('ЗАО "Вектор"'),
+('ООО "Старт"'),
+('АО "ГлобалТех"'),
+('ИП Петрова С.К.');
+
+-- Вставка данных в таблицу ClientContacts
+INSERT INTO ClientContacts (ClientId, ContactType, ContactValue) VALUES
+(1, 'Email', 'romashka@mail.ru'),
+(1, 'Телефон', '+7 (495) 111-11-11'),
+(1, 'Факс', '+7 (495) 111-11-12'),
+(2, 'Email', 'info@techprom.ru'),
+(2, 'Телефон', '+7 (495) 222-22-22'),
+(3, 'Телефон', '+7 (495) 333-33-33'),
+(4, 'Email', 'vector@vector.com'),
+(4, 'Телефон', '+7 (495) 444-44-44'),
+(4, 'Факс', '+7 (495) 444-44-45'),
+(4, 'Мобильный', '+7 (916) 444-44-44'),
+(5, 'Телефон', '+7 (495) 555-55-55'),
+(6, 'Email', 'info@globaltech.com'),
+(6, 'Телефон', '+7 (495) 666-66-66'),
+(6, 'Факс', '+7 (495) 666-66-67'),
+(6, 'Мобильный', '+7 (916) 666-66-66'),
+(6, 'Skype', 'globaltech.skype');
+
+
+SELECT 
+    Clients.ClientName AS "Наименование клиента",
+    COUNT(cc.Id) AS "Количество контактов"
+FROM 
+    Clients c
+LEFT JOIN 
+    ClientContacts cc ON Clients.Id = cc.ClientId
+GROUP BY 
+    Clients.Id, Clients.ClientName
+ORDER BY 
+    Clients.ClientName;
+
+SELECT 
+    Clients.ClientName AS "Наименование клиента",
+    COUNT(cc.Id) AS "Количество контактов"
+FROM 
+    Clients
+LEFT JOIN 
+    ClientContacts cc ON Clients.Id = cc.ClientId
+GROUP BY 
+    Clients.Id, Clients.ClientName
+HAVING COUNT(cc.Id) > 2
+ORDER BY 
+    Clients.ClientName;
+
+
+CREATE TABLE Dates (
+    Id BIGINT NOT NULL,
+    Dt DATE NOT NULL,
+    PRIMARY KEY (Id, Dt)
+);
+
+INSERT INTO Dates (Id, Dt) VALUES
+(1, '2023-01-01'),
+(1, '2023-01-02'),
+(1, '2023-01-03'),
+(1, '2023-01-05'),
+(1, '2023-01-06'),
+(1, '2023-01-08'),
+(2, '2023-02-10'),
+(2, '2023-02-11'),
+(2, '2023-02-12'),
+(2, '2023-02-15'),
+(3, '2023-03-01'),
+(3, '2023-03-02'),
+(3, '2023-03-05'),
+(3, '2023-03-06'),
+(3, '2023-03-07'),
+(4, '2023-04-10'),
+(4, '2023-04-11');
+
+WITH DateGroups as (
+SELECT Dates.Id, 
+Dates.dt , 
+LEAD(Dt, 1, '9999-12-31') OVER (PARTITION BY Id ORDER BY Dt) AS NextDtWithDefault
+FROM Dates
+ORDER BY Id , Dates.dt)
+
+SELECT * FROM DateGroups
+WHERE NextDtWithDefault != '9999-12-31' 
